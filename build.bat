@@ -1,0 +1,1 @@
+cl main.c user32.lib gdi32.lib kernel32.lib /Fe:bsod.exe /GS- /link /NODEFAULTLIB /SUBSYSTEM:WINDOWS
