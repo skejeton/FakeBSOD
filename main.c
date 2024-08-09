@@ -1,7 +1,9 @@
 // clang-format off
 #include <Windows.h>
 
-const char *Text = "\n"
+const char *Text;
+
+const char *DefaultText = "\n"
 "A problem has been detected and Windows has been shut down to prevent damage\n"
 "to your computer.\n"
 "\n"
@@ -47,21 +49,14 @@ HANDLE TimerEvent;
 HANDLE TimerQueue;
 HANDLE Timer;
 HBRUSH Bkg;
+HWND Window;
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    RECT R;
     switch (uMsg)
     {
     case WM_DESTROY:
         PostQuitMessage(0);
-        return 0;
-    case WM_SIZE:
-        InvalidateRect(hWnd, NULL, TRUE);
-        return 0;
-    case WM_PAINT:
-        GetWindowRect(hWnd, &R);
-        StretchDIBits(GetDC(hWnd), 0, 0, R.right-R.left, R.bottom-R.top, 0, 0, 800, 600, BitmapPixels, &BitmapInfo, DIB_RGB_COLORS, SRCCOPY);
         return 0;
     default:
         return DefWindowProcA(hWnd, uMsg, wParam, lParam);
@@ -82,9 +77,14 @@ void CALLBACK TimerProc(PVOID lpParam, BOOLEAN TimerOrWaitFired)
     } else {
         FillRect(DC, &(RECT){0, 0, 800, Ticks*12}, Bkg);
     }
+    RECT R;
+    GetWindowRect(Window, &R);
+    StretchDIBits(GetDC(Window), 0, 0, R.right-R.left, R.bottom-R.top, 0, 0, 800, 600, BitmapPixels, &BitmapInfo, DIB_RGB_COLORS, SRCCOPY);
     SetEvent(TimerEvent);
     if (!Done)
         CreateTimerQueueTimer( &Timer, TimerQueue, (WAITORTIMERCALLBACK)TimerProc, 0, 25, 0, 0);
+    else
+        DeleteTimerQueueTimer(TimerQueue, Timer, TimerEvent);
 }
 
 char *strcpy(char *dest, const char *src)
@@ -104,13 +104,24 @@ size_t strlen(const char *str)
 
 int WinMainCRTStartup()
 {
+    Text = DefaultText;
+    OFSTRUCT Dummy;
+    HFILE CustomInput = OpenFile("bsod.txt", &Dummy, OF_READ);
+    if (CustomInput != HFILE_ERROR) {
+        DWORD Size = GetFileSize((HANDLE)CustomInput, NULL);
+        char *Buf = VirtualAlloc(NULL, Size+1, MEM_COMMIT, PAGE_READWRITE);
+        ReadFile((HANDLE)CustomInput, Buf, Size, &Size, NULL);
+        Buf[Size] = 0;
+        Text = Buf;
+    }
+
     WNDCLASSA WC = { 0 };
     WC.lpfnWndProc = WindowProc;
     WC.hInstance = GetModuleHandleA(0);
     WC.lpszClassName = "FakeBSODWindowClass";
     RegisterClassA(&WC);
 
-    HWND Window = CreateWindowA(WC.lpszClassName, "BSOD", WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0, 800, 600, NULL, NULL, WC.hInstance, NULL);
+    Window = CreateWindowA(WC.lpszClassName, "BSOD", WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0, 800, 600, NULL, NULL, WC.hInstance, NULL);
 
     ShowWindow(Window, TRUE);
 
@@ -136,7 +147,6 @@ int WinMainCRTStartup()
     strcpy(LogFont.lfFaceName, "Lucida Console");
     HFONT Font = CreateFontIndirect(&LogFont);
     SelectObject(DC, Bmp);
-
     SelectObject(DC, Font);
     ShowCursor(0);
     SetTextColor(DC, RGB(255, 255, 255));
@@ -146,7 +156,7 @@ int WinMainCRTStartup()
 
     TimerQueue = CreateTimerQueue();
 
-    CreateTimerQueueTimer( &Timer, TimerQueue, (WAITORTIMERCALLBACK)TimerProc, 0, 500, 0, 0);
+    CreateTimerQueueTimer( &Timer, TimerQueue, (WAITORTIMERCALLBACK)TimerProc, 0, 1000, 0, 0);
 
     ChangeDisplaySettingsA(&(DEVMODEA){
         .dmSize = sizeof(DEVMODEA),
