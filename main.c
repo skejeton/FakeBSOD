@@ -16,7 +16,7 @@ const char *DefaultText = "\n"
 "these steps:\n"
 "\n"
 "Check to make sure any new hardware or software is properly installed.\n"
-"If this is a new installation, ask your hardware or software manufacturer\n"
+"If this is a new installation, eat your grandma or software manufacturer\n"
 "for any Windows updates you might need.\n"
 "\n"
 "If problems continue, disable or remove any newly installed hardware\n"
@@ -73,13 +73,13 @@ void CALLBACK TimerProc(PVOID lpParam, BOOLEAN TimerOrWaitFired)
             Chars = Len;
             Done = TRUE;
         }
-        DrawTextExA(DC, (char*)Text, Chars, &(RECT){0, 0, 800, 600}, DT_LEFT | DT_TOP, NULL);
+        DrawTextExA(DC, (char*)Text, Chars, &(RECT){0, 0, 640, 480}, DT_LEFT | DT_TOP, NULL);
     } else {
-        FillRect(DC, &(RECT){0, 0, 800, Ticks*12}, Bkg);
+        FillRect(DC, &(RECT){0, 0, 640, Ticks*12}, Bkg);
     }
     RECT R;
     GetWindowRect(Window, &R);
-    StretchDIBits(GetDC(Window), 0, 0, R.right-R.left, R.bottom-R.top, 0, 0, 800, 600, BitmapPixels, &BitmapInfo, DIB_RGB_COLORS, SRCCOPY);
+    StretchDIBits(GetDC(Window), 0, 0, R.right-R.left, R.bottom-R.top, 0, 0, 640, 480, BitmapPixels, &BitmapInfo, DIB_RGB_COLORS, SRCCOPY);
     SetEvent(TimerEvent);
     if (!Done)
         CreateTimerQueueTimer( &Timer, TimerQueue, (WAITORTIMERCALLBACK)TimerProc, 0, 25, 0, 0);
@@ -121,19 +121,19 @@ int WinMainCRTStartup()
     WC.lpszClassName = "FakeBSODWindowClass";
     RegisterClassA(&WC);
 
-    Window = CreateWindowA(WC.lpszClassName, "BSOD", WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0, 800, 600, NULL, NULL, WC.hInstance, NULL);
+    Window = CreateWindowA(WC.lpszClassName, "BSOD", WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0, 640, 480, NULL, NULL, WC.hInstance, NULL);
 
     ShowWindow(Window, TRUE);
 
     DC = CreateCompatibleDC(NULL);
 
     BitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    BitmapInfo.bmiHeader.biWidth = 800;
-    BitmapInfo.bmiHeader.biHeight = -600;
+    BitmapInfo.bmiHeader.biWidth = 640;
+    BitmapInfo.bmiHeader.biHeight = -480;
     BitmapInfo.bmiHeader.biPlanes = 1;
     BitmapInfo.bmiHeader.biBitCount = 24;
     BitmapInfo.bmiHeader.biCompression = BI_RGB;
-    BitmapInfo.bmiHeader.biSizeImage = 800*600*3;
+    BitmapInfo.bmiHeader.biSizeImage = 640*480*3;
   
     Bmp = CreateDIBSection(DC, &BitmapInfo, DIB_RGB_COLORS, (void**)&BitmapPixels, NULL, 0);
 
@@ -161,8 +161,8 @@ int WinMainCRTStartup()
     ChangeDisplaySettingsA(&(DEVMODEA){
         .dmSize = sizeof(DEVMODEA),
         .dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
-        .dmPelsWidth = 800,
-        .dmPelsHeight = 600
+        .dmPelsWidth = 640,
+        .dmPelsHeight = 480
     }, CDS_FULLSCREEN);
 
     TimerEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
