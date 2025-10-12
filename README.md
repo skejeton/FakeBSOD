@@ -1,13 +1,10 @@
 # FakeBSOD
 
-It's a fake Windows Xp/Vista/7 BSOD. *Completely harmless*, can be exited with
-ALT+F4 =D
+Fake Windows XP/Vista/7 BSOD. Alt+F4 to exit.
 
 You can provide custom text by placing `bsod.txt` alongside the current directory.
 
-Get the latest release https://github.com/skejeton/FakeBSOD/releases
-
-![How it looks...](./bsod.gif)
+![Demo](./bsod.gif)
 
 # Building
 
